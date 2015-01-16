@@ -1,4 +1,8 @@
 (function() {
+  function now() {
+    return performance.now();
+  }
+
   function update(dt) {
     app.ball.update(dt);
     app.maze.update(dt);
@@ -36,9 +40,9 @@
     app.maze.render(dt);
   }
 
-  function loop(now) {
+  function loop() {
     app.fpsMeter.tickStart();
-    app.now = now;
+    app.now = now();
 
     app.dt += ((app.now - app.last) / 1000);
 
@@ -79,7 +83,7 @@
     });
 
     app.dt = 0;
-    app.last = performance.now();
+    app.last = now();
     requestAnimationFrame(loop);
   }
 

@@ -25,7 +25,7 @@
     this.x = this.marginLeft;
     this.y = this.marginTop;
 
-		this.bumpOffset = 0;
+    this.bumpOffset = 0;
 
     this.type = options.type;
 
@@ -55,16 +55,16 @@
     });
   };
 
-	Maze.prototype.hitbox = function() {
-		return {
-			top: this.y,
-			bottom: this.y + this.height,
-			left: this.x,
-			right: this.x + this.width,
-			width: this.width,
-			height: this.height
-		};
-	};
+  Maze.prototype.hitbox = function() {
+    return {
+      top: this.y,
+      bottom: this.y + this.height,
+      left: this.x,
+      right: this.x + this.width,
+      width: this.width,
+      height: this.height
+    };
+  };
 
   Maze.prototype.load = function() {
     this.rows = [];
