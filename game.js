@@ -5,25 +5,28 @@
   }
 
   function checkCollisions(dt) {
-    if (app.ball.x < app.maze.x) {
-      app.ball.vx *= -1;
+    var bh = app.ball.hitbox();
+    var mh = app.maze.hitbox();
+
+    if (bh.left < mh.left) {
+      app.ball.moveRight();
     }
 
-    if (app.ball.y < app.maze.y) {
-      app.ball.vy *= -1;
+    if (bh.right > mh.right) {
+      app.ball.moveLeft();
     }
 
-    if ((app.ball.x + 2 * app.ball.radius) > (app.maze.x + app.maze.width)) {
-      app.ball.vx *= -1;
+    if (bh.top < mh.top) {
+      app.ball.moveDown();
     }
 
-    if ((app.ball.y + 2 * app.ball.radius) > (app.maze.y + app.maze.height)) {
-      app.ball.vy *= -1;
+    if (bh.bottom > mh.bottom) {
+      app.ball.moveUp();
     }
   }
 
   function render(dt) {
-    app.graphics.clear();
+    //app.graphics.clear();
 
     var padding = 2;
     app.graphics.fillStyle("white");
@@ -37,15 +40,15 @@
     app.fpsMeter.tickStart();
     app.now = now;
 
-    app.dt = app.dt + Math.min(1, (app.now - app.last) / 1000);
+    app.dt += ((app.now - app.last) / 1000);
 
-    while (app.dt > app.stepScaled) {
-      app.dt = app.dt - app.stepScaled;
+    while (app.dt > app.step) {
+      app.dt -= app.step;
       update(app.dt);
       checkCollisions(app.dt);
     }
 
-    render(app.dt / app.timeScale);
+    render(app.dt);
 
     app.last = app.now;
     app.fpsMeter.tick();
@@ -59,6 +62,7 @@
     app.canvas.height = app.height;
     app.context = app.canvas.getContext("2d");
     app.graphics.init();
+    app.input.init();
 
     app.maze = new app.Maze({
       width: app.width * 0.8,
@@ -69,8 +73,8 @@
     app.ball = new app.Ball({
       x: 100,
       y: 100,
-      vx: 100,
-      vy: 200,
+      vx: 200,
+      vy: 400,
       radius: 10
     });
 

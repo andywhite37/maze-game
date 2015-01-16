@@ -1,17 +1,17 @@
 (function() {
   var mazes = {
     easy: [
-      "tl   t    t    t    t    t    t    t    t    tr  ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "ls   -    -    -    -    tblr -    -    -    re  ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "l    -    -    -    -    -    -    -    -    r   ",
-      "lb   b    b    b    b    b    b    b    b    br  "
+      "tlre t    t    t    t    t    t    t    t    tr   ",
+      "lr   -    -    -    -    -    -    -    -    r    ",
+      "lr   -    -    -    -    -    -    -    -    r    ",
+      "lb   r    b    -    -    -    -    -    -    r    ",
+      "l    -    -    -    -    -    -    -    -    r    ",
+      "l    -    -    -    -    tblr -    -    -    r    ",
+      "l    -    -    -    -    -    -    -    -    r    ",
+      "l    -    -    -    -    -    -    -    -    r    ",
+      "l    -    -    -    -    -    -    -    -    r    ",
+      "l    -    -    -    -    -    -    -    -    r    ",
+      "lb   b    b    b    b    b    b    b    b    brs  "
     ]
   };
 
@@ -24,6 +24,8 @@
 
     this.x = this.marginLeft;
     this.y = this.marginTop;
+
+		this.bumpOffset = 0;
 
     this.type = options.type;
 
@@ -52,6 +54,17 @@
       });
     });
   };
+
+	Maze.prototype.hitbox = function() {
+		return {
+			top: this.y,
+			bottom: this.y + this.height,
+			left: this.x,
+			right: this.x + this.width,
+			width: this.width,
+			height: this.height
+		};
+	};
 
   Maze.prototype.load = function() {
     this.rows = [];
