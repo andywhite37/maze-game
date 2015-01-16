@@ -1,107 +1,83 @@
 (function() {
-    // DOM/sizes/etc.
-    var width = 500;
-    var height = 500;
-    var canvas;
-    var ctx;
+  function update(dt) {
+    app.ball.update(dt);
+    app.maze.update(dt);
+  }
 
-    // Animation frame/loop variables
-    var fpsMeter;
-    var lastNow;
-    var deltaSeconds = 0;
-    var framesPerSecond = 60;
-    var secondsPerFrame = 1 / framesPerSecond;
-    var timeScaleFactor = 1;
-    var timeScaledSecondsPerFrame = timeScaleFactor * secondsPerFrame;
-
-    // Game state
-    var ballX = 0;
-    var ballY = 0;
-    var ballSize = 10;
-
-    function update(deltaSeconds) {
-        console.log("update", deltaSeconds);
-        var velocity = 100; // px/s
-
-        if (ballX + ballSize > width) {
-            ballX = 0;
-        } else {
-            ballX += velocity * deltaSeconds;
-        }
-
-        if (ballY + ballSize > height) {
-            ballY = 0;
-        } else {
-            ballY += velocity * deltaSeconds;
-        }
+  function checkCollisions(dt) {
+    if (app.ball.x < app.maze.x) {
+      app.ball.vx *= -1;
     }
 
-    function render(deltaSeconds) {
-        console.log("render", deltaSeconds);
-        clear();
-        //rect(ballX, ballY, ballSize, ballSize);
-        circle(ballX + ballSize / 2, ballY + ballSize / 2, ballSize / 2);
+    if (app.ball.y < app.maze.y) {
+      app.ball.vy *= -1;
     }
 
-    function clear() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if ((app.ball.x + 2 * app.ball.radius) > (app.maze.x + app.maze.width)) {
+      app.ball.vx *= -1;
     }
 
-    function rect(x, y, w, h, fillStyle) {
-        ctx.fillStyle = fillStyle || "red";
-        ctx.fillRect(x, y, w, h);
+    if ((app.ball.y + 2 * app.ball.radius) > (app.maze.y + app.maze.height)) {
+      app.ball.vy *= -1;
+    }
+  }
+
+  function render(dt) {
+    app.graphics.clear();
+
+    var padding = 2;
+    app.graphics.fillStyle("white");
+    app.graphics.fillRect(padding, padding, app.width - 2 * padding, app.height - 2 * padding);
+
+    app.ball.render(dt);
+    app.maze.render(dt);
+  }
+
+  function loop(now) {
+    app.fpsMeter.tickStart();
+    app.now = now;
+
+    app.dt = app.dt + Math.min(1, (app.now - app.last) / 1000);
+
+    while (app.dt > app.stepScaled) {
+      app.dt = app.dt - app.stepScaled;
+      update(app.dt);
+      checkCollisions(app.dt);
     }
 
-    function circle(centerX, centerY, radius, fillStyle, strokeStyle, lineWidth, startAngle, endAngle, counterClockwise) {
-        fillStyle = fillStyle || "red";
-        strokeStyle = strokeStyle || "black";
-        lineWidth = lineWidth || 1;
-        startAngle = startAngle || 0;
-        endAngle = endAngle || 2 * Math.PI;
-        counterClockwise = counterClockwise || false;
+    render(app.dt / app.timeScale);
 
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle, counterClockwise);
-        ctx.fillStyle = fillStyle;
-        ctx.fill();
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = strokeStyle;
-        ctx.stroke();
-    }
+    app.last = app.now;
+    app.fpsMeter.tick();
+    requestAnimationFrame(loop);
+  }
 
-    function text(str, x, y, font, fillStyle) {
-        ctx.font = font || "10pt sans-serif";
-        ctx.fillStyle = fillStyle || "black";
-        ctx.fillText(str, x, y);
-    }
+  function ready() {
+    app.fpsMeter = new FPSMeter({ decimals: 0, graph: true, theme: "dark" });
+    app.canvas = document.getElementById("game-canvas");
+    app.canvas.width = app.width;
+    app.canvas.height = app.height;
+    app.context = app.canvas.getContext("2d");
+    app.graphics.init();
 
-    function loop(now) {
-        fpsMeter.tickStart();
+    app.maze = new app.Maze({
+      width: app.width * 0.8,
+      height: app.height * 0.8,
+      type: "easy"
+    });
 
-        deltaSeconds = deltaSeconds + Math.min(1, (now - lastNow) / 1000);
+    app.ball = new app.Ball({
+      x: 100,
+      y: 100,
+      vx: 100,
+      vy: 200,
+      radius: 10
+    });
 
-        while (deltaSeconds > timeScaledSecondsPerFrame) {
-            deltaSeconds = deltaSeconds - timeScaledSecondsPerFrame;
-            update(secondsPerFrame);
-        }
+    app.dt = 0;
+    app.last = performance.now();
+    requestAnimationFrame(loop);
+  }
 
-        render(deltaSeconds / timeScaleFactor);
-
-        lastNow = now;
-        fpsMeter.tick();
-        requestAnimationFrame(loop);
-    }
-
-    function ready() {
-        fpsMeter = new FPSMeter({ decimals: 0, graph: true, theme: "dark", left: "400px", top: "18px" });
-        canvas = document.getElementById("game-canvas");
-        canvas.width = width;
-        canvas.height = height;
-        ctx = canvas.getContext("2d");
-
-        lastNow = performance.now();
-        requestAnimationFrame(loop);
-    }
-
-    document.addEventListener("DOMContentLoaded", ready);
+  document.addEventListener("DOMContentLoaded", ready);
 }());

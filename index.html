@@ -1,18 +1,26 @@
 <!doctype html>
 <html>
-    <head>
-        <title>A-Maze-Ing</title>
-        <style type="text/css">
-            canvas {
-                border: 1px solid black;
-            }
-
-        </style>
-    </head>
-    <body>
-        <h1>Maze</h1>
-        <canvas id="game-canvas"></canvas>
-        <script type="text/javascript" src="fpsmeter.js"></script>
-        <script type="text/javascript" src="game.js"></script>
-    </body>
+  <head>
+    <title>PPPM</title>
+    <link rel="stylesheet" href="style.css"/>
+  </head>
+  <body>
+    <img src="predator.jpeg" alt="Predator image here" />
+    <h1>Predator Ping Pong Maze</h1>
+    <ul id="instructions">
+      <li>Up: bump maze up</li>
+      <li>Down: bump maze down</li>
+      <li>Left: bump maze left</li>
+      <li>Right: bump maze right</li>
+      <li>(TODO) Space: bounce maze</li>
+    </ul>
+    <canvas id="game-canvas"></canvas>
+    <script type="text/javascript" src="fps-meter.js"></script>
+    <script type="text/javascript" src="core.js"></script>
+    <script type="text/javascript" src="graphics.js"></script>
+    <script type="text/javascript" src="cell.js"></script>
+    <script type="text/javascript" src="maze.js"></script>
+    <script type="text/javascript" src="ball.js"></script>
+    <script type="text/javascript" src="game.js"></script>
+  </body>
 </html>
