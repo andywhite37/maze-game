@@ -8,48 +8,44 @@
 
   var input = {
     init: function(){
-      this.on("keydown", this.onKeyDown);
-      this.on("keyup", this.onKeyUp);
+      $(document).on("keydown", this.onKeyDown.bind(this));
+      $(document).on("keyup", this.onKeyUp.bind(this));
     },
 
-    isPressed: {},
+    isPressed: [],
 
     onKeyDown: function(e) {
       if (PREVENT_DEFAULTS.indexOf(e.which) >= 0) {
         e.preventDefault();
       }
-      this.isPressed["" + e.which] = true;
+      this.isPressed[e.which] = true;
     },
 
     onKeyUp: function(e) {
       if (PREVENT_DEFAULTS.indexOf(e.which) >= 0) {
         e.preventDefault();
       }
-      this.isPressed["" + e.which] = false;
+      this.isPressed[e.which] = false;
     },
 
     up: function() {
-      return this.isPressed["" + UP];
+      return this.isPressed[UP];
     },
 
     down: function() {
-      return this.isPressed["" + DOWN];
+      return this.isPressed[DOWN];
     },
 
     left: function() {
-      return this.isPressed["" + LEFT];
+      return this.isPressed[LEFT];
     },
 
     right: function() {
-      return this.isPressed["" + RIGHT];
+      return this.isPressed[RIGHT];
     },
 
     space: function() {
-      return this.isPressed["" + SPACE];
-    },
-
-    on: function(name, handler) {
-      document.addEventListener(name, handler.bind(this));
+      return this.isPressed[SPACE];
     }
   };
 
