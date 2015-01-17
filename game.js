@@ -31,11 +31,9 @@
 
   function render(dt) {
     //app.graphics.clear();
-
     var padding = 2;
     app.graphics.fillStyle("white");
     app.graphics.fillRect(padding, padding, app.width - 2 * padding, app.height - 2 * padding);
-
     app.ball.render(dt);
     app.maze.render(dt);
   }
@@ -48,8 +46,8 @@
 
     while (app.dt > app.step) {
       app.dt -= app.step;
-      update(app.dt);
-      checkCollisions(app.dt);
+      update(app.step);
+      checkCollisions(app.step);
     }
 
     render(app.dt);

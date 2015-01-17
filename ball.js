@@ -41,13 +41,14 @@
   };
 
   Ball.prototype.hitbox = function() {
-    var size = 2 * this.radius;
+    var diameter = 2 * this.radius;
     return {
       top: this.y,
-      bottom: this.y + size,
+      bottom: this.y + diameter,
       left: this.x,
-      right: this.x + size,
-      size: size
+      right: this.x + diameter,
+      width: diameter,
+      height: diameter
     };
   };
 
