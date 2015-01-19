@@ -1,46 +1,57 @@
-(function() {
-  var graphics = {
-    init: function() {
-      this.font();
-      this.lineWidth();
-      this.strokeStyle();
-      this.strokeStyle();
+(function(app) {
+  function Graphics(options) {
+    if (!(this instanceof Graphics)) {
+      return new Graphics(options);
+    }
+
+    // Canvas/context
+    this.canvas = options.canvas;
+    this.canvas.width = options.width || 800;
+    this.canvas.height = options.height || 600;
+    this.context = this.canvas.getContext("2d");
+
+    // Set defailts
+    this.setFont(options.font || "10pt sans-serif");
+    this.setLineWidth(options.lineWidth || 1);
+    this.setStrokeStyle(options.strokeStyle || "black");
+    this.setFillStyle(options.fillStyle || "gray");
+  }
+
+  _.extend(Graphics.prototype, {
+    setFont: function(font) {
+      this.context.font = font;
     },
 
-    font: function(font) {
-      app.context.font = font || "10pt sans-serif";
+    setLineWidth: function(lineWidth) {
+      this.context.lineWidth = lineWidth;
     },
 
-    lineWidth: function(width) {
-      app.context.lineWidth = width || 1;
+    setStrokeStyle: function(strokeStyle) {
+      this.context.strokeStyle = strokeStyle;
     },
 
-    strokeStyle: function(style) {
-      app.context.strokeStyle = style || "black";
-    },
-
-    fillStyle: function(style) {
-      app.context.fillStyle = style || "orange";
+    setFillStyle: function(fillStyle) {
+      this.context.fillStyle = fillStyle;
     },
 
     clear: function() {
-      app.context.clearRect(0, 0, app.width, app.height);
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     },
 
     rect: function(x, y, w, h) {
-      app.context.rect(x, y, w, h);
-      app.context.stroke();
+      this.context.rect(x, y, w, h);
+      this.context.stroke();
     },
 
     fillRect: function(x, y, w, h) {
-      app.context.fillRect(x, y, w, h);
+      this.context.fillRect(x, y, w, h);
     },
 
     line: function(x1, y1, x2, y2) {
-      app.context.beginPath();
-      app.context.moveTo(x1, y1);
-      app.context.lineTo(x2, y2);
-      app.context.stroke();
+      this.context.beginPath();
+      this.context.moveTo(x1, y1);
+      this.context.lineTo(x2, y2);
+      this.context.stroke();
     },
 
     circle: function() {
@@ -48,16 +59,16 @@
     },
 
     fillCircle: function(centerX, centerY, radius) {
-      app.context.beginPath();
-      app.context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-      app.context.fill();
-      app.context.stroke();
+      this.context.beginPath();
+      this.context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+      this.context.fill();
+      this.context.stroke();
     },
 
     text: function(message, x, y) {
-      app.context.fillText(message, x, y);
+      this.context.fillText(message, x, y);
     }
-  };
+  });
 
-  app.graphics = graphics;
-}());
+  app.Graphics = Graphics;
+}(app || {}));
