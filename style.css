@@ -8,22 +8,19 @@ body {
 img {
   float: right;
   width: 200px;
-  border-radius: 10px
 }
 
 #game-canvas {
   display: block;
   margin: 0 auto;
-  border-radius: 20px
 }
 
-/* Mini clearfix */
-.clearfix:before,
-.clearfix:after {
-    content: " "; /* 1 */
-    display: table; /* 2 */
+.clearfix::before,
+.clearfix::after {
+    content: " ";
+    display: table;
 }
 
-.clearfix:after {
+.clearfix::after {
     clear: both;
 }

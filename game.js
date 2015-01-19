@@ -1,7 +1,7 @@
 (function(app) {
   // Global settings
   var width = 800; // canvas width
-  var height = 600; // canvas height
+  var height = 800; // canvas height
   var mazeScaleFactor = 0.75;
   var mazeWidth = width * mazeScaleFactor;
   var mazeHeight = height * mazeScaleFactor;
@@ -141,8 +141,8 @@
 
     graphics = new app.Graphics({
       canvas: canvas,
-      width: app.width,
-      height: app.height
+      width: width,
+      height: height
     });
 
     input = new app.Input();
@@ -160,8 +160,8 @@
     return new app.Ball({
       graphics: graphics,
       physics: {
-        x: mazeX + 50,
-        y: mazeY + 50,
+        x: mazeX + mazeWidth - 50,
+        y: mazeY + mazeHeight - 50,
         vx: 200,
         vy: 400
       },
@@ -178,15 +178,30 @@
     // All values expressed as values from 0 to 1.  E.g. [0.5, 0.5, 0.1, 0.5]
     // would be a wall starting in the center of the maze with a width of 10% of the maze,
     // and a height of 50% of the maze height
-    var thickness = 0.01;
+    var t = 0.01;
 
     var coords = [
-      [0, 0, thickness, 1], // left wall
-      [1, 0, thickness, 1], // right wall
-      [0, 0, 1, thickness], // top wall
-      [0, 1, 1, thickness], // bottom wall
-      [0.5, 0.25, 0.5, thickness]
-
+      [0, 0, t, 1], // left wall
+      [1, 0, t, 1], // right wall
+      [0, 0, 1, t], // top wall
+      [0, 1, 1, t], // bottom wall
+      [0.90, 0.10, 0.01, 0.90], // right 
+      [0.10, 0.10, 0.80, 0.01], // top
+      [0.10, 0.10, 0.01, 0.80], // left
+      [0.10, 0.90, 0.70, 0.01], // bottom
+      [0.80, 0.20, 0.01, 0.70], // right
+      [0.20, 0.20, 0.60, 0.01], // top
+      [0.20, 0.20, 0.01, 0.60], // left
+      [0.20, 0.80, 0.50, 0.01], // bottom
+      [0.70, 0.30, 0.01, 0.50], // right
+      [0.30, 0.30, 0.40, 0.01],
+      [0.30, 0.30, 0.01, 0.40],
+      [0.30, 0.70, 0.30, 0.01],
+      [0.60, 0.40, 0.01, 0.30],
+      [0.40, 0.40, 0.20, 0.01],
+      [0.40, 0.40, 0.01, 0.20],
+      [0.40, 0.60, 0.10, 0.01],
+      [0.50, 0.50, 0.01, 0.10],
     ];
 
     var colors = [
@@ -216,6 +231,12 @@
       });
 
       wall.index = index;
+
+      console.log("Wall (%s, %s) %s x %s",
+        wall.physics.x,
+        wall.physics.y,
+        wall.appearance.width,
+        wall.appearance.height);
 
       return wall;
     });
