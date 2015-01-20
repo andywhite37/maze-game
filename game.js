@@ -59,61 +59,60 @@
 
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
+    var goLeft = false;
+    var goRight = false;
+    var goUp = false;
+    var goDown = false;
 
-    var isBallMovingLeft = ball.physics.vx < 0;
-    var isBallMovingRight = ball.physics.vx > 0;
-    var isBallMovingUp = ball.physics.vy < 0;
-    var isBallMovingDown = ball.physics.vy > 0;
-    var radius = ball.appearance.radius;
-
-    var direct = _.reduce(walls, function(directAcc, wall) {
+    _.each(walls, function(wall) {
       var wh = wall.getHitbox();
 
-      var isBallVerticallyAlignedWithWall = wh.top <= bh.top + radius && bh.top + radius <= wh.bottom;
-      var isBallCollidingOnLeft = wh.left <= bh.left && bh.left <= wh.right;
-      var isBallCollidingOnRight = wh.left <= bh.right && bh.right <= wh.right;
+      if (app.util.intersects(bh, wh)) {
+        if (wall.isVertical() && wh.top <= bh.centerY && bh.centerY <= wh.bottom) {
+          if (bh.centerX > wh.centerX) {
+            goRight = true;
+          } else {
+            goLeft = true;
+          }
+        }
 
-      var isBallHorizontallyAlignedWithWall = wh.left <= bh.left + radius && bh.left + radius <= wh.right;
-      var isBallCollidingOnTop = wh.top <= bh.top && bh.top <= wh.bottom;
-      var isBallCollidingOnBottom = wh.top <= bh.bottom && bh.bottom <= wh.bottom;
-
-      var isColliding = false;
-
-      // Ball moving left (-vx)
-      if (isBallMovingLeft && isBallVerticallyAlignedWithWall && isBallCollidingOnLeft) {
-        isColliding = true;
-        directAcc.right = true;
+        if (wall.isHorizontal() && wh.left <= bh.centerX && bh.centerX <= wh.right) {
+          if (bh.centerY > wh.centerY) {
+            goDown = true;
+          } else {
+            goUp = true;
+          }
+        }
       }
+    });
 
-      // Ball moving right (+vx)
-      if (isBallMovingRight && isBallVerticallyAlignedWithWall && isBallCollidingOnRight) {
-        isColliding = true;
-        directAcc.left = true;
+    if (goLeft || goRight) {
+      if (!ball.collision.activeX) {
+        ball.collision.activeX = true;
+
+        if (goLeft) {
+          ball.physics.vx = Math.abs(ball.physics.vx) * -1;
+        } else if (goRight) {
+          ball.physics.vx = Math.abs(ball.physics.vx);
+        }
       }
-
-      // Ball moving up (-vy)
-      if (isBallMovingUp && isBallHorizontallyAlignedWithWall && isBallCollidingOnTop) {
-        isColliding = true;
-        directAcc.down = true;
-      }
-
-      // Ball moving down (+vy)
-      if (isBallMovingDown && isBallHorizontallyAlignedWithWall && isBallCollidingOnBottom) {
-        isColliding = true;
-        directAcc.up = true;
-      }
-
-      wall.collision.active = isColliding;
-
-      return directAcc;
-    }, {});
-
-    if (_.isEmpty(direct)) {
-      ball.collision.active = false;
     } else {
-      ball.collision.active = true;
-      ball.physics.direct(direct);
+      ball.collision.activeX = false;
     }
+
+    if (goUp || goDown) {
+      if (!ball.collision.activeY) {
+        ball.collision.activeY = true;
+        if (goUp) {
+          ball.physics.vy = Math.abs(ball.physics.vy) * -1;
+        } else if (goDown) {
+          ball.physics.vy = Math.abs(ball.physics.vy);
+        }
+      }
+    } else {
+      ball.collision.activeY = false;
+    }
+
   }
 
   function render(dt) {
@@ -127,7 +126,8 @@
   }
 
   function clear() {
-    //graphics.clear();
+    graphics.clear();
+
     var padding = 2;
     graphics.setFillStyle("white");
     graphics.fillRect(padding, padding, width - 2 * padding, height - 2 * padding);
@@ -162,8 +162,8 @@
       physics: {
         x: mazeX + mazeWidth - 50,
         y: mazeY + mazeHeight - 50,
-        vx: 200,
-        vy: 400
+        vx: 400,
+        vy: 600
       },
       appearance: {
         radius: 10,
@@ -174,71 +174,45 @@
   }
 
   function createWalls() {
-    // x, y, w, h
-    // All values expressed as values from 0 to 1.  E.g. [0.5, 0.5, 0.1, 0.5]
-    // would be a wall starting in the center of the maze with a width of 10% of the maze,
-    // and a height of 50% of the maze height
-    var t = 0.01;
-
     var coords = [
-      [0, 0, t, 1], // left wall
-      [1, 0, t, 1], // right wall
-      [0, 0, 1, t], // top wall
-      [0, 1, 1, t], // bottom wall
-      [0.90, 0.10, 0.01, 0.90], // right 
-      [0.10, 0.10, 0.80, 0.01], // top
-      [0.10, 0.10, 0.01, 0.80], // left
-      [0.10, 0.90, 0.70, 0.01], // bottom
-      [0.80, 0.20, 0.01, 0.70], // right
-      [0.20, 0.20, 0.60, 0.01], // top
-      [0.20, 0.20, 0.01, 0.60], // left
-      [0.20, 0.80, 0.50, 0.01], // bottom
-      [0.70, 0.30, 0.01, 0.50], // right
-      [0.30, 0.30, 0.40, 0.01],
-      [0.30, 0.30, 0.01, 0.40],
-      [0.30, 0.70, 0.30, 0.01],
-      [0.60, 0.40, 0.01, 0.30],
-      [0.40, 0.40, 0.20, 0.01],
-      [0.40, 0.40, 0.01, 0.20],
-      [0.40, 0.60, 0.10, 0.01],
-      [0.50, 0.50, 0.01, 0.10],
-    ];
+      // Bounds
+      [0, 0, 1, 0], // top
+      [1, 0, 1, 1], // right
+      [1, 1, 0, 1], // bottom
+      [0, 1, 0, 0], // left
 
-    var colors = [
-      "red",
-      "orange",
-      "yellow",
-      "green",
-      "blue",
-      "purple"
+      [0.9, 1, 0.9, 0.1], // right
+      [0.9, 0.1, 0.1, 0.1], // top
+      [0.1, 0.1, 0.1, 0.9], // left
+      [0.1, 0.9, 0.8, 0.9], // bottom
+      [0.8, 0.9, 0.8, 0.2], // right
+      [0.8, 0.2, 0.2, 0.2], // top
+      [0.2, 0.2, 0.2, 0.8], // left
+      [0.2, 0.8, 0.7, 0.8], // bottom
+      [0.7, 0.8, 0.7, 0.3], // right
+      [0.7, 0.3, 0.3, 0.3], // top
+      [0.3, 0.3, 0.3, 0.7], // left
+      [0.3, 0.7, 0.6, 0.7], // bottom
+      [0.6, 0.7, 0.6, 0.4], // right
+      [0.6, 0.4, 0.4, 0.4], // top
+      [0.4, 0.4, 0.4, 0.6], // left
+      [0.4, 0.6, 0.5, 0.6], // bottom
+      [0.5, 0.6, 0.5, 0.5], // right
     ];
 
     return _.map(coords, function(c, index) {
-      var fillStyle = colors[index % colors.length];
-      var wall = new app.Wall({
+      return new app.Wall({
         input: input,
         graphics: graphics,
-        physics: {
+        physics1: {
           x: c[0] * mazeWidth + mazeX,
           y: c[1] * mazeHeight + mazeY
         },
-        appearance: {
-          width: c[2] * mazeWidth,
-          height: c[3] * mazeHeight,
-          strokeStyle: "black",
-          fillStyle: fillStyle
+        physics2: {
+          x: c[2] * mazeWidth + mazeX,
+          y: c[3] * mazeHeight + mazeY
         }
       });
-
-      wall.index = index;
-
-      console.log("Wall (%s, %s) %s x %s",
-        wall.physics.x,
-        wall.physics.y,
-        wall.appearance.width,
-        wall.appearance.height);
-
-      return wall;
     });
   }
 

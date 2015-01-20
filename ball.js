@@ -31,9 +31,11 @@
 
       this.graphics.setFillStyle(this.appearance.fillStyle);
 
+      /*
       if (this.collision.active) {
         this.graphics.setFillStyle("blue");
       }
+      */
 
       this.graphics.fillCircle(
         this.physics.x + this.appearance.radius,
@@ -42,14 +44,28 @@
     },
 
     getHitbox: function() {
-      var diameter = 2 * this.appearance.radius;
+      var radius = this.appearance.radius;
+      var diameter = 2 * radius;
+      var x = this.physics.x;
+      var y = this.physics.y;
+      var left = x;
+      var right = x + diameter;
+      var top = y;
+      var bottom = y + diameter;
+      var width = diameter;
+      var height = diameter;
+      var centerX = left + radius;
+      var centerY = top + radius;
+
       return {
-        left: this.physics.x,
-        right: this.physics.x + diameter,
-        top: this.physics.y,
-        bottom: this.physics.y + diameter,
-        width: diameter,
-        height: diameter
+        left: left,
+        right: right,
+        top: top,
+        bottom: bottom,
+        width: width,
+        height: height,
+        centerX: centerX,
+        centerY: centerY
       };
     }
   });
