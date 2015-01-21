@@ -59,13 +59,21 @@
 
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
+
     var goLeft = false;
     var goRight = false;
     var goUp = false;
     var goDown = false;
 
+    var vxWall = false;
+    var vyWall = false;
+
+    // TODO: This is terrible
+
     _.each(walls, function(wall) {
       var wh = wall.getHitbox();
+      vxWall = wall.points[0].vx;
+      vyWall = wall.points[0].vy;
 
       if (app.util.intersects(bh, wh)) {
         if (wall.isVertical() && wh.top <= bh.centerY && bh.centerY <= wh.bottom) {
@@ -90,10 +98,14 @@
       if (!ball.collision.activeX) {
         ball.collision.activeX = true;
 
-        if (goLeft) {
-          ball.physics.vx = Math.abs(ball.physics.vx) * -1;
-        } else if (goRight) {
-          ball.physics.vx = Math.abs(ball.physics.vx);
+        if (goLeft || vxWall < 0) {
+          ball.physics.vx = Math.min(Math.abs(ball.physics.vx) * -1, vxWall);
+        } else if (goRight || vxWall > 0) {
+          ball.physics.vx = Math.max(Math.abs(ball.physics.vx), vxWall);
+        }
+
+        if (vxWall) {
+          ball.physics.vy = 0;
         }
       }
     } else {
@@ -103,16 +115,20 @@
     if (goUp || goDown) {
       if (!ball.collision.activeY) {
         ball.collision.activeY = true;
-        if (goUp) {
-          ball.physics.vy = Math.abs(ball.physics.vy) * -1;
-        } else if (goDown) {
-          ball.physics.vy = Math.abs(ball.physics.vy);
+
+        if (goUp || vyWall < 0) {
+          ball.physics.vy = Math.min(Math.abs(ball.physics.vy) * -1, vyWall);
+        } else if (goDown || vyWall > 0) {
+          ball.physics.vy = Math.max(Math.abs(ball.physics.vy), vyWall);
+        }
+
+        if (vyWall) {
+          ball.physics.vx = 0;
         }
       }
     } else {
       ball.collision.activeY = false;
     }
-
   }
 
   function render(dt) {
@@ -160,10 +176,10 @@
     return new app.Ball({
       graphics: graphics,
       physics: {
-        x: mazeX + mazeWidth - 50,
-        y: mazeY + mazeHeight - 50,
-        vx: 400,
-        vy: 600
+        x: mazeX + mazeWidth - 25,
+        y: mazeY + mazeHeight - 25,
+        vx: 0,
+        vy: 0
       },
       appearance: {
         radius: 10,
@@ -204,14 +220,13 @@
       return new app.Wall({
         input: input,
         graphics: graphics,
-        physics1: {
+        points: [{
           x: c[0] * mazeWidth + mazeX,
           y: c[1] * mazeHeight + mazeY
-        },
-        physics2: {
+        }, {
           x: c[2] * mazeWidth + mazeX,
           y: c[3] * mazeHeight + mazeY
-        }
+        }]
       });
     });
   }
