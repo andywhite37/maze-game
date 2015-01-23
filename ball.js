@@ -31,12 +31,6 @@
 
       this.graphics.setFillStyle(this.appearance.fillStyle);
 
-      /*
-      if (this.collision.active) {
-        this.graphics.setFillStyle("blue");
-      }
-      */
-
       this.graphics.fillCircle(
         this.physics.x + this.appearance.radius,
         this.physics.y + this.appearance.radius,
@@ -67,6 +61,36 @@
         centerX: centerX,
         centerY: centerY
       };
+    },
+
+    getHitboxLast: function() {
+      var radius = this.appearance.radius;
+      var diameter = 2 * radius;
+      var x = this.physics.xLast;
+      var y = this.physics.yLast;
+      var left = x;
+      var right = x + diameter;
+      var top = y;
+      var bottom = y + diameter;
+      var width = diameter;
+      var height = diameter;
+      var centerX = left + radius;
+      var centerY = top + radius;
+
+      return {
+        left: left,
+        right: right,
+        top: top,
+        bottom: bottom,
+        width: width,
+        height: height,
+        centerX: centerX,
+        centerY: centerY
+      };
+    },
+
+    getHitboxUnion: function() {
+      return app.util.union(this.getHitbox(), this.getHitboxLast());
     }
   });
 

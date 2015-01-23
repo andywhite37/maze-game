@@ -6,18 +6,40 @@
 
     options = _.extend({}, this.defaultOptions, options);
 
-    this.x = this.x0 = options.x;
-    this.y = this.y0 = options.y;
-    this.z = this.z0 = options.z;
+    this.setPosition(options.x, options.y, options.z);
+    this.x0 = this.x;
+    this.y0 = this.y;
+    this.z0 = this.z;
 
-    this.vx = this.vx0 = options.vx;
-    this.vy = this.vy0 = options.vy;
-    this.vz = this.vz0 = options.vz;
+    this.setVelocity(options.vx, options.vy, options.vz);
+    this.vx0 = this.vx;
+    this.vy0 = this.vy;
+    this.vz0 = this.vz;
 
-    this.ax = thisax0 = options.ax;
-    this.ay = thisay0 = options.ay;
-    this.az = thisaz0 = options.az;
+    this.setAcceleration(options.ax, options.ay, options.az);
+    this.ax0 = this.ax;
+    this.ay0 = this.ay;
+    this.az0 = this.az;
   }
+
+  _.each(["x", "y", "z"], function(dim) {
+    var Dim = dim.toUpperCase();
+
+    Physics.prototype["set" + Dim] = function(val) {
+      this[dim + "Last"] = this[dim];
+      this[dim] = val;
+    };
+
+    Physics.prototype["setV" + Dim] = function(val) {
+      this["v" + dim + "Last"] = this["v" + dim];
+      this["v" + dim] = val;
+    };
+
+    Physics.prototype["setA" + Dim] = function(val) {
+      this["a" + dim + "Last"] = this["a" + dim];
+      this["a" + dim] = val;
+    };
+  });
 
   _.extend(Physics.prototype, {
     defaultOptions: {
@@ -32,14 +54,36 @@
       az: 0
     },
 
-    tick: function(dt) {
-      this.vx += this.ax * dt;
-      this.vy += this.ay * dt;
-      this.vz += this.az * dt;
+    setPosition: function(x, y, z) {
+      this.setX(x);
+      this.setY(y);
+      this.setZ(z);
+    },
 
-      this.x += this.vx * dt;
-      this.y += this.vy * dt;
-      this.z += this.vz * dt;
+    setVelocity: function(vx, vy, vz) {
+      this.setVX(vx);
+      this.setVY(vy);
+      this.setVZ(vz);
+    },
+
+    setAcceleration: function(ax, ay, az) {
+      this.setAX(ax);
+      this.setAY(ay);
+      this.setAZ(az);
+    },
+
+    tick: function(dt) {
+      this.setVelocity(
+        this.vx + this.ax * dt,
+        this.vy + this.ay * dt,
+        this.vz + this.az * dt
+      );
+
+      this.setPosition(
+        this.x + this.vx * dt,
+        this.y + this.vy * dt,
+        this.z + this.vz * dt
+      );
     },
 
     isMovingLeft: function() {

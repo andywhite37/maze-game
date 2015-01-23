@@ -82,67 +82,78 @@
 
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
+    var bhu = ball.getHitboxUnion();
 
-    var goLeft = false;
-    var goRight = false;
-    var goUp = false;
-    var goDown = false;
+    var bounceBallLeftWall = null;
+    var bounceBallRightWall = null;
+    var bounceBallUpWall = null;
+    var bounceBallDownWall = null;
 
-    var vxWall = false;
-    var vyWall = false;
+    var vxBall = ball.physics.vx;
+    var vyBall = ball.physics.vy;
+
+    var vxWall = null;
+    var vyWall = null;
 
     // TODO: This is terrible
 
     _.each(walls, function(wall) {
       var wh = wall.getHitbox();
+      var whu = wall.getHitboxUnion();
       vxWall = wall.points[0].vx;
       vyWall = wall.points[0].vy;
 
-      if (app.util.intersects(bh, wh)) {
+      if (app.util.intersects(bhu, whu)) {
+        // Wall is vertical and ball is vertically in-line with the wall
         if (wall.isVertical() && wh.top <= bh.centerY && bh.centerY <= wh.bottom) {
-          if (bh.centerX > wh.centerX) {
-            goRight = true;
-          } else {
-            goLeft = true;
+          if (vxWall > 0 || vxBall < 0) {
+            bounceBallRightWall = wh;
+          } else if (vxWall < 0 || vxBall > 0) {
+            bounceBallLeftWall = wh;
           }
         }
 
+        // Wall is horizontal and ball is horizontally in-line with the wall
         if (wall.isHorizontal() && wh.left <= bh.centerX && bh.centerX <= wh.right) {
-          if (bh.centerY > wh.centerY) {
-            goDown = true;
-          } else {
-            goUp = true;
+          if (vyWall > 0 || vyBall < 0) {
+            bounceBallDownWall = wh;
+          } else if (vyWall < 0 || vyBall > 0) {
+            bounceBallUpWall = wh;
           }
         }
       }
     });
 
-    if (goLeft || goRight) {
+    if (bounceBallLeftWall || bounceBallRightWall) {
       if (!ball.collision.activeX) {
         ball.collision.activeX = true;
 
-        if (goLeft || vxWall < 0) {
-          ball.physics.vx = Math.min(Math.abs(ball.physics.vx) * -1, vxWall);
-        } else if (goRight || vxWall > 0) {
-          ball.physics.vx = Math.max(Math.abs(ball.physics.vx), vxWall);
+        if (bounceBallLeftWall) {
+          ball.physics.setX(bounceBallLeftWall.left - ball.appearance.radius * 2);
+          ball.physics.setVX(Math.min(Math.abs(vxBall) * -1, vxWall));
+        } else if (bounceBallRightWall) {
+          ball.physics.setX(bounceBallRightWall.right);
+          ball.physics.setVX(Math.max(Math.abs(vxBall), vxWall));
         }
 
         if (vxWall) {
-          ball.physics.vy = 0;
+          ball.physics.setVY(0);
         }
       }
     } else {
       ball.collision.activeX = false;
     }
 
-    if (goUp || goDown) {
+    if (bounceBallUpWall || bounceBallDownWall) {
       if (!ball.collision.activeY) {
         ball.collision.activeY = true;
 
-        if (goUp || vyWall < 0) {
-          ball.physics.vy = Math.min(Math.abs(ball.physics.vy) * -1, vyWall);
-        } else if (goDown || vyWall > 0) {
-          ball.physics.vy = Math.max(Math.abs(ball.physics.vy), vyWall);
+        if (bounceBallUpWall) {
+          ball.physics.setY(bounceBallUpWall.top - ball.appearance.radius * 2);
+          ball.physics.setVY(Math.min(Math.abs(vyBall) * -1, vyWall));
+        } else if (bounceBallDownWall) {
+          ball.physics.setY(bounceBallDownWall.bottom);
+          ball.physics.setVY(Math.max(Math.abs(vyBall), vyWall));
         }
 
         if (vyWall) {
