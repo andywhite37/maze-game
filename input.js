@@ -13,6 +13,7 @@
     }
 
     this.isPressed = [];
+    this.presses = 0;
 
     _.each(keys, function(keyCode) {
       this.isPressed[keyCode] = false;
@@ -43,6 +44,8 @@
     onKeyUp: function(e) {
       this.preventDefault(e);
       this.isPressed[e.which] = false;
+
+      this.presses++;
     },
 
     preventDefault: function(e) {

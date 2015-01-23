@@ -25,7 +25,8 @@
     }, options.collision);
 
     this.appearance = _.extend({
-      strokeStyle: "black"
+      lineWidth: 3,
+      strokeStyle: "red"
     }, options.appearance);
   }
 
@@ -95,7 +96,11 @@
     },
 
     render: function(dt) {
+      this.graphics.context.save();
+      this.graphics.setLineWidth(this.appearance.lineWidth);
       this.graphics.setStrokeStyle(this.appearance.strokeStyle);
+      this.graphics.context.shadowBlur = 50;
+      this.graphics.context.shadowColor = "red";
 
       /*
       if (this.collision.active) {
@@ -104,6 +109,7 @@
       */
 
       this.graphics.line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y);
+      this.graphics.context.restore();
     },
 
     isVertical: function() {

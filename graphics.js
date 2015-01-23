@@ -11,7 +11,7 @@
     this.context = this.canvas.getContext("2d");
 
     // Set defailts
-    this.setFont(options.font || "10pt sans-serif");
+    this.setFont(options.font || "14pt 'Allerta Stencil', sans-serif");
     this.setLineWidth(options.lineWidth || 1);
     this.setStrokeStyle(options.strokeStyle || "black");
     this.setFillStyle(options.fillStyle || "gray");
@@ -65,7 +65,7 @@
       this.context.stroke();
     },
 
-    text: function(message, x, y) {
+    fillText: function(message, x, y) {
       this.context.fillText(message, x, y);
     }
   });

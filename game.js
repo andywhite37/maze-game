@@ -25,6 +25,12 @@
   var graphics;
   var input;
 
+  var isStarted = false;
+  var elapsedTime = 0;
+  var displayTime = 0;
+  var score = 1000;
+  var scoreText;
+
   function timestamp() {
     return performance.now();
   }
@@ -47,7 +53,24 @@
     requestAnimationFrame(loop);
   }
 
+  var lastPresses = 0;
+
   function update(dt) {
+    if ((input.down() || input.up() || input.right() || input.left()) && !isStarted) {
+      isStarted = true;
+      elapsedTime = 0;
+    }
+
+    if (isStarted) {
+      elapsedTime += dt;
+      displayTime = Math.round(elapsedTime * 10) / 10;
+      score -= step;
+      score -= input.presses - lastPresses;
+      var displayScore = Math.round(score * 10) / 10;
+      scoreText = "Score: " + displayScore + " (time: " + displayTime + ", moves: " + input.presses + ")";
+      lastPresses = input.presses;
+    }
+
     ball.update(dt);
 
     _.each(walls, function(wall) {
@@ -134,6 +157,15 @@
   function render(dt) {
     clear();
 
+    if (scoreText) {
+      graphics.context.save();
+      graphics.context.shadowBlur = 10;
+      graphics.context.shadowColor = "red";
+      graphics.setFillStyle("white");
+      graphics.fillText(scoreText, 250, 30);
+      graphics.context.restore();
+    }
+
     ball.render(dt);
 
     _.each(walls, function(wall) {
@@ -145,7 +177,8 @@
     graphics.clear();
 
     var padding = 2;
-    graphics.setFillStyle("white");
+    graphics.setFillStyle("rgba(0, 0, 10, 0.8)");
+    graphics.setStrokeStyle("black");
     graphics.fillRect(padding, padding, width - 2 * padding, height - 2 * padding);
   }
 
