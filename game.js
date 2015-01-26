@@ -15,20 +15,22 @@
   var last;
   var dt;
 
-  // Game objects
-  var ball;
-  var walls;
-
   // Other/utilities
   var fpsMeter;
   var canvas;
   var graphics;
   var input;
 
-  var isStarted = false;
-  var elapsedTime = 0;
-  var displayTime = 0;
-  var score = 1000;
+  // Game objects
+  var maze;
+  var ball;
+  var walls;
+  var lastPresses;
+  var isStarted;
+  var isStopped;
+  var elapsedTime;
+  var displayTime;
+  var score;
   var scoreText;
 
   function timestamp() {
@@ -48,12 +50,14 @@
 
     render(dt);
 
+    if (isStopped) {
+      return;
+    }
+
     last = now;
     fpsMeter.tick();
     requestAnimationFrame(loop);
   }
-
-  var lastPresses = 0;
 
   function update(dt) {
     if ((input.down() || input.up() || input.right() || input.left()) && !isStarted) {
@@ -83,6 +87,10 @@
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
     var bhu = ball.getHitboxUnion();
+
+    if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
+      stop();
+    }
 
     var bounceBallLeftWall = null;
     var bounceBallRightWall = null;
@@ -199,6 +207,8 @@
 
     canvas = document.getElementById("game-canvas");
 
+    bind();
+
     graphics = new app.Graphics({
       canvas: canvas,
       width: width,
@@ -207,23 +217,136 @@
 
     input = new app.Input();
 
-    ball = createBall(mazeX, mazeY, mazeWidth, mazeHeight);
-    walls = createWalls(mazeX, mazeY, mazeWidth, mazeHeight);
+    reset("easy");
+    start();
+  }
 
+  function bind() {
+    _.each(["easy", "medium", "hard"], function(type) {
+      $(".button-" + type).on("click", function() {
+        reset(type);
+        start();
+      });
+    });
+  }
+
+  function reset(type) {
+    isStarted = false;
+    isStopped = false;
+    lastPresses = 0;
+    elapsedTime = 0;
+    displayTime = 0;
+    score = 1000;
+    scoreText = "";
+
+    createMaze(type);
+  }
+
+  function start() {
     // Start game loop
+    isStopped = false;
     dt = 0;
     last = timestamp();
     requestAnimationFrame(loop);
+  }
+
+  function stop() {
+    scoreText = "You died!  Your final score was: " + Math.round(score * 10) / 10;
+    isStopped = true;
+  }
+
+  function createMaze(type) {
+    var mazes = {
+      // Spiral
+      easy: {
+        start: {
+          x: mazeX + mazeWidth - 25,
+          y: mazeY + mazeHeight - 25,
+          vx: 0,
+          vy: 0
+        },
+        end: {
+        },
+        walls: [
+          // Bounds
+          [0, 0, 1, 0], // top
+          [1, 0, 1, 1], // right
+          [1, 1, 0, 1], // bottom
+          [0, 1, 0, 0], // left
+
+          // Maze walls
+          [0.9, 1, 0.9, 0.1], // right
+          [0.9, 0.1, 0.1, 0.1], // top
+          [0.1, 0.1, 0.1, 0.9], // left
+          [0.1, 0.9, 0.8, 0.9], // bottom
+          [0.8, 0.9, 0.8, 0.2], // right
+          [0.8, 0.2, 0.2, 0.2], // top
+          [0.2, 0.2, 0.2, 0.8], // left
+          [0.2, 0.8, 0.7, 0.8], // bottom
+          [0.7, 0.8, 0.7, 0.3], // right
+          [0.7, 0.3, 0.3, 0.3], // top
+          [0.3, 0.3, 0.3, 0.7], // left
+          [0.3, 0.7, 0.6, 0.7], // bottom
+          [0.6, 0.7, 0.6, 0.4], // right
+          [0.6, 0.4, 0.4, 0.4], // top
+          [0.4, 0.4, 0.4, 0.6], // left
+          [0.4, 0.6, 0.5, 0.6], // bottom
+          [0.5, 0.6, 0.5, 0.5], // right
+        ]
+      },
+      medium: {
+        start: {
+          x: mazeX + mazeWidth - 25,
+          y: mazeY + mazeHeight - 25,
+          vx: 0,
+          vy: 0
+        },
+        end: {
+        },
+        walls: [
+          // Bounds
+          [0, 0, 1, 0], // top
+          [1, 0, 1, 1], // right
+          [1, 1, 0, 1], // bottom
+          [0, 1, 0, 0] // left
+
+          // Maze walls
+        ]
+      },
+      // Stair-step
+      hard: {
+        start: {
+          x: mazeX + mazeWidth - 25,
+          y: mazeY + mazeHeight - 25,
+          vx: 0,
+          vy: 0
+        },
+        end: {
+        },
+        walls: [
+          // Bounds
+          [0, 0, 1, 0], // top
+          [1, 0, 1, 1], // right
+          [1, 1, 0, 1], // bottom
+          [0, 1, 0, 0] // left
+
+        ]
+      }
+    };
+
+    maze = mazes[type];
+    ball = createBall();
+    walls = createWalls();
   }
 
   function createBall() {
     return new app.Ball({
       graphics: graphics,
       physics: {
-        x: mazeX + mazeWidth - 25,
-        y: mazeY + mazeHeight - 25,
-        vx: 0,
-        vy: 0
+        x: maze.start.x,
+        y: maze.start.y,
+        vx: maze.start.vx || 0,
+        vy: maze.start.vy || 0
       },
       appearance: {
         radius: 10,
@@ -234,42 +357,16 @@
   }
 
   function createWalls() {
-    var coords = [
-      // Bounds
-      [0, 0, 1, 0], // top
-      [1, 0, 1, 1], // right
-      [1, 1, 0, 1], // bottom
-      [0, 1, 0, 0], // left
-
-      [0.9, 1, 0.9, 0.1], // right
-      [0.9, 0.1, 0.1, 0.1], // top
-      [0.1, 0.1, 0.1, 0.9], // left
-      [0.1, 0.9, 0.8, 0.9], // bottom
-      [0.8, 0.9, 0.8, 0.2], // right
-      [0.8, 0.2, 0.2, 0.2], // top
-      [0.2, 0.2, 0.2, 0.8], // left
-      [0.2, 0.8, 0.7, 0.8], // bottom
-      [0.7, 0.8, 0.7, 0.3], // right
-      [0.7, 0.3, 0.3, 0.3], // top
-      [0.3, 0.3, 0.3, 0.7], // left
-      [0.3, 0.7, 0.6, 0.7], // bottom
-      [0.6, 0.7, 0.6, 0.4], // right
-      [0.6, 0.4, 0.4, 0.4], // top
-      [0.4, 0.4, 0.4, 0.6], // left
-      [0.4, 0.6, 0.5, 0.6], // bottom
-      [0.5, 0.6, 0.5, 0.5], // right
-    ];
-
-    return _.map(coords, function(c, index) {
+    return _.map(maze.walls, function(wall, index) {
       return new app.Wall({
         input: input,
         graphics: graphics,
         points: [{
-          x: c[0] * mazeWidth + mazeX,
-          y: c[1] * mazeHeight + mazeY
+          x: wall[0] * mazeWidth + mazeX,
+          y: wall[1] * mazeHeight + mazeY
         }, {
-          x: c[2] * mazeWidth + mazeX,
-          y: c[3] * mazeHeight + mazeY
+          x: wall[2] * mazeWidth + mazeX,
+          y: wall[3] * mazeHeight + mazeY
         }]
       });
     });

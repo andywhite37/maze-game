@@ -20,13 +20,36 @@ img {
   margin-top: 35px;
   margin-right: 65px;
   -webkit-filter: drop-shadow(0px 0px 50px red) hue-rotate(180deg) invert(1) saturate(6.9) sepia(0.6);
-  border-radius: 70px;
+  /*border-radius: 70px;*/
+}
+
+.button-container {
+  margin: 0 auto;
+  width: 610px
+}
+
+.button {
+  width: 200px;
+  height: 40px;
+  background-color: transparent;
+  color: red;
+  font-size: 20px;
+  border: 2px solid red;
+  outline: none;
+}
+
+.button:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.button:active {
+  background-color: rgba(255, 0, 0, 0.5);
 }
 
 #game-canvas {
   display: block;
   margin: 0 auto;
-  border-radius: 100px
+  /*border-radius: 100px*/
 }
 
 .clearfix::before,
