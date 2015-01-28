@@ -26,25 +26,31 @@
     var Axis = axis.toUpperCase();
 
     Physics.prototype["set" + Axis] = function(val) {
+      /*
       if (this[axis] === val) {
         return;
       }
+      */
       this[axis + "Last"] = _.isNumber(this[axis]) ? this[axis] : val;
       this[axis] = val;
     };
 
     Physics.prototype["setV" + Axis] = function(val) {
+      /*
       if (this["v" + axis] === val) {
         return;
       }
+      */
       this["v" + axis + "Last"] = _.isNumber(this["v" + axis]) ? this["v" + axis] : val;
       this["v" + axis] = val;
     };
 
     Physics.prototype["setA" + Axis] = function(val) {
+      /*
       if (this["a" + axis] === val) {
         return;
       }
+      */
       this["a" + axis + "Last"] = _.isNumber(this["a" + axis]) ? this["a" + axis] : val;
       this["a" + axis] = val;
     };

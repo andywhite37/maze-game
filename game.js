@@ -84,86 +84,92 @@
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
     var bhu = ball.getHitboxUnion();
+    var bp = ball.physics;
+    var ballMovingLeft = bp.vx < 0;
+    var ballMovingRight = bp.vx > 0;
+    var ballStoppedX = bp.vx === 0;
+    var ballMovingUp = bp.vy < 0;
+    var ballMovingDown = bp.vy > 0;
+    var ballStoppedY = bp.vy === 0;
 
     // Check if ball goes out of the maze.  This would be my fault, but we'll blame the player.
     if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
       stop();
     }
 
-    var bounceBallLeftWall = null;
-    var bounceBallRightWall = null;
-    var bounceBallUpWall = null;
-    var bounceBallDownWall = null;
-
-    var vxBall = ball.physics.vx;
-    var vyBall = ball.physics.vy;
+    var bounceBallLeft = null;
+    var bounceBallRight = null;
+    var bounceBallUp = null;
+    var bounceBallDown = null;
 
     _.each(walls, function(wall) {
       var wh = wall.getHitbox();
       var whu = wall.getHitboxUnion();
+      var wp = wall.points[0];
+      var wallMovingLeft = wp.vx < 0;
+      var wallMovingRight = wp.vx > 0;
+      var wallStoppedX = wp.vx === 0;
+      var wallMovingUp = wp.vy < 0;
+      var wallMovingDown = wp.vy > 0;
+      var wallStoppedY = wp.vy === 0;
 
-      var vxWall = wall.points[0].vx;
-      var vyWall = wall.points[0].vy;
-      var vxWallLast = wall.points[0].vxLast;
-      var vyWallLast = wall.points[0].vyLast;
-
-      // See if the ball would have hit the wall between the last tick and this tick
       if (app.util.intersects(bhu, whu)) {
-        console.log("intersect", wall.points[0]);
 
-        // Wall is vertical and ball is vertically in-line with the wall
-        if (!bounceBallRightWall && !bounceBallLeftWall && wall.isVertical() && whu.top < bhu.bottom && whu.bottom > bhu.top) {
-          if (vxWall > 0 || vxBall < 0) {
-            // Wall is moving right or ball is moving left -> bounce ball right
-            bounceBallRightWall = wh;
-            bounceBallRightWall.vx = vxWall;
-            bounceBallRightWall.vxLast = vxWallLast;
-          } else if (vxWall < 0 || vxBall > 0) {
-            // Wall is moving left or ball is moving right -> bounce ball left
-            bounceBallLeftWall = wh;
-            bounceBallLeftWall.vx = vxWall;
-            bounceBallLeftWall.vxLast = vxWallLast;
+        if (!bounceBallRight && !bounceBallLeft && wall.isVertical()) {
+          if (ballMovingLeft || (wallMovingRight && !ballMovingRight)) {
+            bounceBallRight = {
+              wall: wall,
+              hitbox: wh,
+              vx: wp.vx
+            };
+          } else if (ballMovingRight || (wallMovingLeft && !ballMovingLeft)) {
+            bounceBallLeft = {
+              wall: wall,
+              hitbox: wh,
+              vx: wp.vx
+            };
           }
         }
 
-        // Wall is horizontal and ball is horizontally in-line with the wall
-        if (!bounceBallUpWall && !bounceBallDownWall && wall.isHorizontal() && whu.left < bhu.right && whu.right > bhu.left) {
-          if (vyWall > 0 || vyBall < 0) {
-            // Wall is moving down or ball is moving up -> bounce ball down
-            bounceBallDownWall = wh;
-            bounceBallDownWall.vy = vyWall;
-            bounceBallDownWall.vyLast = vyWallLast;
-          } else if (vyWall < 0 || vyBall > 0) {
-            // Wall is moving up or ball is moving down -> bounce ball up
-            bounceBallUpWall = wh;
-            bounceBallUpWall.vy = vyWall;
-            bounceBallUpWall.vyLast = vyWallLast;
+        if (!bounceBallUp && !bounceBallDown && wall.isHorizontal()) {
+          if (ballMovingUp || (wallMovingDown && !ballMovingDown)) {
+            bounceBallDown = {
+              wall: wall,
+              hitbox: wh,
+              vy: wp.vy
+            };
+          } else if (ballMovingDown || (wallMovingUp && !ballMovingUp)) {
+            bounceBallUp = {
+              wall: wall,
+              hitbox: wh,
+              vy: wp.vy
+            };
           }
         }
       }
+
+      wall.restrictMovement();
     });
 
-    if (bounceBallLeftWall || bounceBallRightWall) {
+    if (bounceBallLeft || bounceBallRight) {
       if (!ball.collision.activeX) {
         ball.collision.activeX = true;
 
-        if (bounceBallLeftWall) {
-          ball.physics.setX(bounceBallLeftWall.left - ball.appearance.radius * 2);
+        if (bounceBallLeft) {
+          ball.physics.setX(bounceBallLeft.wall.getHitbox().left - ball.appearance.radius * 2);
           ball.physics.setVX(Math.min(
-            Math.abs(vxBall) * -1,
-            Math.abs(bounceBallLeftWall.vx) * -1
+            Math.abs(bp.vx) * -1,
+            Math.abs(bounceBallLeft.vx) * -1
           ));
-        } else if (bounceBallRightWall) {
-          ball.physics.setX(bounceBallRightWall.right);
+        } else if (bounceBallRight) {
+          ball.physics.setX(bounceBallRight.wall.getHitbox().right);
           ball.physics.setVX(Math.max(
-            Math.abs(vxBall),
-            Math.abs(bounceBallRightWall.vx)
+            Math.abs(bp.vx),
+            Math.abs(bounceBallRight.vx)
           ));
         }
 
-        // If the ball is not also bouncing up or down, make it a clean horizontal hit,
-        // and cancel the Y velocity
-        if (!bounceBallUpWall && !bounceBallDownWall) {
+        if (!bounceBallUp && !bounceBallDown) {
           ball.physics.setVY(0);
         }
       }
@@ -171,31 +177,25 @@
       ball.collision.activeX = false;
     }
 
-    if (bounceBallUpWall || bounceBallDownWall) {
+    if (bounceBallUp || bounceBallDown) {
       if (!ball.collision.activeY) {
         ball.collision.activeY = true;
 
-        if (bounceBallUpWall) {
-          ball.physics.setY(bounceBallUpWall.top - ball.appearance.radius * 2);
+        if (bounceBallUp) {
+          ball.physics.setY(bounceBallUp.wall.getHitbox().top - ball.appearance.radius * 2);
           ball.physics.setVY(Math.min(
-            Math.abs(vyBall) * -1,
-            Math.abs(bounceBallUpWall.vy) * -1
+            Math.abs(bp.vy) * -1,
+            Math.abs(bounceBallUp.vy) * -1
           ));
-        } else if (bounceBallDownWall) {
-          ball.physics.setY(bounceBallDownWall.bottom);
+        } else if (bounceBallDown) {
+          ball.physics.setY(bounceBallDown.wall.getHitbox().bottom);
           ball.physics.setVY(Math.max(
-            Math.abs(vyBall),
-            Math.abs(bounceBallDownWall.vy)
+            Math.abs(bp.vy),
+            Math.abs(bounceBallDown.vy)
           ));
         }
 
-        if (!bounceBallUpWall && !bounceBallDownWall) {
-          ball.physics.setVY(0);
-        }
-
-        // If the ball is not also bouncing left or right, make it a clean vertical hit,
-        // and cancel the X velocity
-        if (!bounceBallLeftWall && !bounceBallRightWall) {
+        if (!bounceBallLeft && !bounceBallRight) {
           ball.physics.setVX(0);
         }
       }

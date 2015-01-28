@@ -42,7 +42,7 @@
         point.tick(dt);
 
         // Make sure the wall doesn't move beyond the set bounds
-        this.restrictMovement(point);
+        //this.restrictMovement(point);
       }, this);
     },
 
@@ -104,27 +104,28 @@
       }
     },
 
-    // TODO: this should probably be in the collision detection, not here
-    restrictMovement: function(point) {
-      if (point.y < (point.y0 - this.movement.displacement)) {
-        point.setVY(0);
-        point.setY(point.y0 - this.movement.displacement);
-      }
+    restrictMovement: function() {
+      _.each(this.points, function(point) {
+        if (point.y < (point.y0 - this.movement.displacement)) {
+          point.setVY(0);
+          point.setY(point.y0 - this.movement.displacement);
+        }
 
-      if (point.y > (point.y0 + this.movement.displacement)) {
-        point.setVY(0);
-        point.setY(point.y0 + this.movement.displacement);
-      }
+        if (point.y > (point.y0 + this.movement.displacement)) {
+          point.setVY(0);
+          point.setY(point.y0 + this.movement.displacement);
+        }
 
-      if (point.x < (point.x0 - this.movement.displacement)) {
-        point.setVX(0);
-        point.setX(point.x0 - this.movement.displacement);
-      }
+        if (point.x < (point.x0 - this.movement.displacement)) {
+          point.setVX(0);
+          point.setX(point.x0 - this.movement.displacement);
+        }
 
-      if (point.x > (point.x0 + this.movement.displacement)) {
-        point.setVX(0);
-        point.setX(point.x0 + this.movement.displacement);
-      }
+        if (point.x > (point.x0 + this.movement.displacement)) {
+          point.setVX(0);
+          point.setX(point.x0 + this.movement.displacement);
+        }
+      }, this);
     },
 
     render: function(dt) {
