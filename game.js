@@ -31,6 +31,7 @@
   var elapsedTime;
   var displayTime;
   var score;
+  var displayScore;
   var scoreText;
 
   function timestamp() {
@@ -50,17 +51,13 @@
 
     render(dt);
 
-    if (isStopped) {
-      return;
-    }
-
     last = now;
     fpsMeter.tick();
     requestAnimationFrame(loop);
   }
 
   function update(dt) {
-    if ((input.down() || input.up() || input.right() || input.left()) && !isStarted) {
+    if (!isStarted && (input.down() || input.up() || input.right() || input.left())) {
       isStarted = true;
       elapsedTime = 0;
     }
@@ -68,11 +65,11 @@
     if (isStarted) {
       elapsedTime += dt;
       displayTime = Math.round(elapsedTime * 10) / 10;
-      score -= step;
-      score -= input.presses - lastPresses;
-      var displayScore = Math.round(score * 10) / 10;
-      scoreText = "Score: " + displayScore + " (time: " + displayTime + ", moves: " + input.presses + ")";
+      score -= dt;
+      score -= (input.presses - lastPresses);
       lastPresses = input.presses;
+      displayScore = Math.round(score * 10) / 10;
+      scoreText = "Score: " + displayScore + " (time: " + displayTime + ", moves: " + input.presses + ")";
     }
 
     ball.update(dt);
@@ -88,6 +85,7 @@
     var bh = ball.getHitbox();
     var bhu = ball.getHitboxUnion();
 
+    // Check if ball goes out of the maze.  This would be my fault, but we'll blame the player.
     if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
       stop();
     }
@@ -100,33 +98,46 @@
     var vxBall = ball.physics.vx;
     var vyBall = ball.physics.vy;
 
-    var vxWall = null;
-    var vyWall = null;
-
-    // TODO: This is terrible
-
     _.each(walls, function(wall) {
       var wh = wall.getHitbox();
       var whu = wall.getHitboxUnion();
-      vxWall = wall.points[0].vx;
-      vyWall = wall.points[0].vy;
 
+      var vxWall = wall.points[0].vx;
+      var vyWall = wall.points[0].vy;
+      var vxWallLast = wall.points[0].vxLast;
+      var vyWallLast = wall.points[0].vyLast;
+
+      // See if the ball would have hit the wall between the last tick and this tick
       if (app.util.intersects(bhu, whu)) {
+        console.log("intersect", wall.points[0]);
+
         // Wall is vertical and ball is vertically in-line with the wall
-        if (wall.isVertical() && wh.top <= bh.centerY && bh.centerY <= wh.bottom) {
+        if (!bounceBallRightWall && !bounceBallLeftWall && wall.isVertical() && whu.top < bhu.bottom && whu.bottom > bhu.top) {
           if (vxWall > 0 || vxBall < 0) {
+            // Wall is moving right or ball is moving left -> bounce ball right
             bounceBallRightWall = wh;
+            bounceBallRightWall.vx = vxWall;
+            bounceBallRightWall.vxLast = vxWallLast;
           } else if (vxWall < 0 || vxBall > 0) {
+            // Wall is moving left or ball is moving right -> bounce ball left
             bounceBallLeftWall = wh;
+            bounceBallLeftWall.vx = vxWall;
+            bounceBallLeftWall.vxLast = vxWallLast;
           }
         }
 
         // Wall is horizontal and ball is horizontally in-line with the wall
-        if (wall.isHorizontal() && wh.left <= bh.centerX && bh.centerX <= wh.right) {
+        if (!bounceBallUpWall && !bounceBallDownWall && wall.isHorizontal() && whu.left < bhu.right && whu.right > bhu.left) {
           if (vyWall > 0 || vyBall < 0) {
+            // Wall is moving down or ball is moving up -> bounce ball down
             bounceBallDownWall = wh;
+            bounceBallDownWall.vy = vyWall;
+            bounceBallDownWall.vyLast = vyWallLast;
           } else if (vyWall < 0 || vyBall > 0) {
+            // Wall is moving up or ball is moving down -> bounce ball up
             bounceBallUpWall = wh;
+            bounceBallUpWall.vy = vyWall;
+            bounceBallUpWall.vyLast = vyWallLast;
           }
         }
       }
@@ -138,13 +149,21 @@
 
         if (bounceBallLeftWall) {
           ball.physics.setX(bounceBallLeftWall.left - ball.appearance.radius * 2);
-          ball.physics.setVX(Math.min(Math.abs(vxBall) * -1, vxWall));
+          ball.physics.setVX(Math.min(
+            Math.abs(vxBall) * -1,
+            Math.abs(bounceBallLeftWall.vx) * -1
+          ));
         } else if (bounceBallRightWall) {
           ball.physics.setX(bounceBallRightWall.right);
-          ball.physics.setVX(Math.max(Math.abs(vxBall), vxWall));
+          ball.physics.setVX(Math.max(
+            Math.abs(vxBall),
+            Math.abs(bounceBallRightWall.vx)
+          ));
         }
 
-        if (vxWall) {
+        // If the ball is not also bouncing up or down, make it a clean horizontal hit,
+        // and cancel the Y velocity
+        if (!bounceBallUpWall && !bounceBallDownWall) {
           ball.physics.setVY(0);
         }
       }
@@ -158,14 +177,26 @@
 
         if (bounceBallUpWall) {
           ball.physics.setY(bounceBallUpWall.top - ball.appearance.radius * 2);
-          ball.physics.setVY(Math.min(Math.abs(vyBall) * -1, vyWall));
+          ball.physics.setVY(Math.min(
+            Math.abs(vyBall) * -1,
+            Math.abs(bounceBallUpWall.vy) * -1
+          ));
         } else if (bounceBallDownWall) {
           ball.physics.setY(bounceBallDownWall.bottom);
-          ball.physics.setVY(Math.max(Math.abs(vyBall), vyWall));
+          ball.physics.setVY(Math.max(
+            Math.abs(vyBall),
+            Math.abs(bounceBallDownWall.vy)
+          ));
         }
 
-        if (vyWall) {
-          ball.physics.vx = 0;
+        if (!bounceBallUpWall && !bounceBallDownWall) {
+          ball.physics.setVY(0);
+        }
+
+        // If the ball is not also bouncing left or right, make it a clean vertical hit,
+        // and cancel the X velocity
+        if (!bounceBallLeftWall && !bounceBallRightWall) {
+          ball.physics.setVX(0);
         }
       }
     } else {
@@ -176,14 +207,9 @@
   function render(dt) {
     clear();
 
-    if (scoreText) {
-      graphics.context.save();
-      graphics.context.shadowBlur = 10;
-      graphics.context.shadowColor = "red";
-      graphics.setFillStyle("white");
-      graphics.fillText(scoreText, 250, 30);
-      graphics.context.restore();
-    }
+    renderScore();
+
+    renderMarkers();
 
     ball.render(dt);
 
@@ -192,17 +218,34 @@
     });
   }
 
+  function renderScore() {
+    if (scoreText) {
+      graphics.save();
+      graphics.context.shadowBlur = 10;
+      graphics.context.shadowColor = "red";
+      graphics.setFillStyle("white");
+      graphics.fillText(scoreText, 250, 30);
+      graphics.restore();
+    }
+  }
+
+  function renderMarkers() {
+  }
+
   function clear() {
     graphics.clear();
 
+    // Draw a transparent backdrop
     var padding = 2;
-    graphics.setFillStyle("rgba(0, 0, 10, 0.8)");
+
+    graphics.save();
+    graphics.setFillStyle("rgba(0, 0, 0, 0.8)");
     graphics.setStrokeStyle("black");
     graphics.fillRect(padding, padding, width - 2 * padding, height - 2 * padding);
+    graphics.restore();
   }
 
   function ready() {
-    // Game loop/environment settings
     fpsMeter = new FPSMeter({ decimals: 0, graph: true, theme: "dark" });
 
     canvas = document.getElementById("game-canvas");
@@ -232,7 +275,8 @@
 
   function reset(type) {
     isStarted = false;
-    isStopped = false;
+    isStopped = true;
+
     lastPresses = 0;
     elapsedTime = 0;
     displayTime = 0;
@@ -243,8 +287,9 @@
   }
 
   function start() {
-    // Start game loop
+    isStarted = false;
     isStopped = false;
+
     dt = 0;
     last = timestamp();
     requestAnimationFrame(loop);
@@ -253,6 +298,7 @@
   function stop() {
     scoreText = "You died!  Your final score was: " + Math.round(score * 10) / 10;
     isStopped = true;
+    isStarted = false;
   }
 
   function createMaze(type) {

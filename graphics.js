@@ -18,6 +18,14 @@
   }
 
   _.extend(Graphics.prototype, {
+    save: function() {
+      this.context.save();
+    },
+
+    restore: function() {
+      this.context.restore();
+    },
+
     setFont: function(font) {
       this.context.font = font;
     },

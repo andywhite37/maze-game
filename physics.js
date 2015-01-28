@@ -22,22 +22,31 @@
     this.az0 = this.az;
   }
 
-  _.each(["x", "y", "z"], function(dim) {
-    var Dim = dim.toUpperCase();
+  _.each(["x", "y", "z"], function(axis) {
+    var Axis = axis.toUpperCase();
 
-    Physics.prototype["set" + Dim] = function(val) {
-      this[dim + "Last"] = this[dim];
-      this[dim] = val;
+    Physics.prototype["set" + Axis] = function(val) {
+      if (this[axis] === val) {
+        return;
+      }
+      this[axis + "Last"] = _.isNumber(this[axis]) ? this[axis] : val;
+      this[axis] = val;
     };
 
-    Physics.prototype["setV" + Dim] = function(val) {
-      this["v" + dim + "Last"] = this["v" + dim];
-      this["v" + dim] = val;
+    Physics.prototype["setV" + Axis] = function(val) {
+      if (this["v" + axis] === val) {
+        return;
+      }
+      this["v" + axis + "Last"] = _.isNumber(this["v" + axis]) ? this["v" + axis] : val;
+      this["v" + axis] = val;
     };
 
-    Physics.prototype["setA" + Dim] = function(val) {
-      this["a" + dim + "Last"] = this["a" + dim];
-      this["a" + dim] = val;
+    Physics.prototype["setA" + Axis] = function(val) {
+      if (this["a" + axis] === val) {
+        return;
+      }
+      this["a" + axis + "Last"] = _.isNumber(this["a" + axis]) ? this["a" + axis] : val;
+      this["a" + axis] = val;
     };
   });
 

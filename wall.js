@@ -31,84 +31,112 @@
   }
 
   _.extend(Wall.prototype, {
+
     update: function(dt) {
       _.each(this.points, function(point) {
-        if ((this.input.up() && this.input.down()) || (!this.input.up() && !this.input.down())) {
-          // No keys pressed, or both up and down pressed
-          if (point.y < point.y0) {
-            // If maze is moved up, set velocity to move it back down to origin
-            point.setVY(this.movement.speed);
-          } else if (point.y > point.y0) {
-            // If maze is moved down, set velocity to move it back up to origin
-            point.setVY(-this.movement.speed);
-          } else {
-            // Maze currently at origin, set velocity to 0
-            point.setVY(0);
-          }
+        // Set wall velocity/position based on input
+        this.handleInputUpDown(point);
+        this.handleInputLeftRight(point);
 
-          // Maze jitters due to math errors.  If it is within 20 pixels of origin, move it to origin
-          if (Math.abs(point.y - point.y0) < 10) {
-            point.setVY(0);
-            point.setY(point.y0);
-          }
-        } else if (this.input.up()) {
-          point.setVY(-this.movement.speed);
-        } else if (this.input.down()) {
-          point.setVY(this.movement.speed);
-        }
-
+        // Move the wall a tick by current acceleration/velocity
         point.tick(dt);
 
-        // Prevent maze from moving more than displacement
-        if (point.y < (point.y0 - this.movement.displacement)) {
-          point.setY(point.y0 - this.movement.displacement);
-        }
-
-        if (point.y > (point.y0 + this.movement.displacement)) {
-          point.setY(point.y0 + this.movement.displacement);
-        }
-
-
-
-        if ((this.input.left() && this.input.right()) || (!this.input.left() && !this.input.right())) {
-          if (point.x < point.x0) {
-            point.setVX(this.movement.speed);
-          } else if (point.x > point.x0) {
-            point.setVX(-this.movement.speed);
-          } else {
-            point.setVX(0);
-          }
-
-          if (Math.abs(point.x - point.x0) < 10) {
-            point.setVX(0);
-            point.setX(point.x0);
-          }
-        } else if (this.input.left()) {
-          point.setVX(-this.movement.speed);
-        } else if (this.input.right()) {
-          point.setVX(this.movement.speed);
-        }
-
-        point.tick(dt);
-
-        if (point.x < (point.x0 - this.movement.displacement)) {
-          point.setX(point.x0 - this.movement.displacement);
-        }
-
-        if (point.x > (point.x0 + this.movement.displacement)) {
-          point.setX(point.x0 + this.movement.displacement);
-        }
+        // Make sure the wall doesn't move beyond the set bounds
+        this.restrictMovement(point);
       }, this);
     },
 
+    handleInputUpDown: function(point) {
+      if ((this.input.up() && this.input.down()) || (!this.input.up() && !this.input.down())) {
+        if (point.y < point.y0) {
+          point.setVY(this.movement.speed);
+        } else if (point.y > point.y0) {
+          point.setVY(-this.movement.speed);
+        } else {
+          point.setVY(0);
+        }
+
+        if (Math.abs(point.y - point.y0) < 10) {
+          point.setVY(0);
+          point.setY(point.y0);
+        }
+
+        return;
+      }
+
+      if (this.input.up()) {
+        point.setVY(-this.movement.speed);
+        return;
+      }
+
+      if (this.input.down()) {
+        point.setVY(this.movement.speed);
+        return;
+      }
+    },
+
+    handleInputLeftRight: function(point) {
+      if ((this.input.left() && this.input.right()) || (!this.input.left() && !this.input.right())) {
+        if (point.x < point.x0) {
+          point.setVX(this.movement.speed);
+        } else if (point.x > point.x0) {
+          point.setVX(-this.movement.speed);
+        } else {
+          point.setVX(0);
+        }
+
+        if (Math.abs(point.x - point.x0) < 10) {
+          point.setVX(0);
+          point.setX(point.x0);
+        }
+
+        return;
+      }
+
+      if (this.input.left()) {
+        point.setVX(-this.movement.speed);
+        return;
+      }
+
+      if (this.input.right()) {
+        point.setVX(this.movement.speed);
+        return;
+      }
+    },
+
+    // TODO: this should probably be in the collision detection, not here
+    restrictMovement: function(point) {
+      if (point.y < (point.y0 - this.movement.displacement)) {
+        point.setVY(0);
+        point.setY(point.y0 - this.movement.displacement);
+      }
+
+      if (point.y > (point.y0 + this.movement.displacement)) {
+        point.setVY(0);
+        point.setY(point.y0 + this.movement.displacement);
+      }
+
+      if (point.x < (point.x0 - this.movement.displacement)) {
+        point.setVX(0);
+        point.setX(point.x0 - this.movement.displacement);
+      }
+
+      if (point.x > (point.x0 + this.movement.displacement)) {
+        point.setVX(0);
+        point.setX(point.x0 + this.movement.displacement);
+      }
+    },
+
     render: function(dt) {
-      this.graphics.context.save();
+      this.graphics.save();
+
       this.graphics.setLineWidth(this.appearance.lineWidth);
       this.graphics.setStrokeStyle(this.appearance.strokeStyle);
       this.graphics.context.shadowBlur = 50;
       this.graphics.context.shadowColor = "red";
       this.graphics.line(this.points[0].x, this.points[0].y, this.points[1].x, this.points[1].y);
-      this.graphics.context.restore();
+
+      this.graphics.restore();
     },
 
     isVertical: function() {

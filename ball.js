@@ -27,14 +27,16 @@
     },
 
     render: function(dt) {
+      this.graphics.save();
+
       this.graphics.setStrokeStyle(this.appearance.strokeStyle);
-
       this.graphics.setFillStyle(this.appearance.fillStyle);
-
       this.graphics.fillCircle(
         this.physics.x + this.appearance.radius,
         this.physics.y + this.appearance.radius,
         this.appearance.radius);
+
+      this.graphics.restore();
     },
 
     getHitbox: function() {
