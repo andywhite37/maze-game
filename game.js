@@ -25,6 +25,7 @@
   var maze;
   var ball;
   var walls;
+  var endMarker;
   var lastPresses;
   var isStarted;
   var isStopped;
@@ -70,20 +71,24 @@
       lastPresses = input.presses;
       displayScore = Math.round(score * 10) / 10;
       scoreText = "Score: " + displayScore + " (time: " + displayTime + ", moves: " + input.presses + ")";
+
+      endMarker.update(dt);
+      ball.update(dt);
+
+      _.each(walls, function(wall) {
+        wall.update(dt);
+      });
+
+      checkCollisions(dt);
+    } else if (isStopped) {
+      endMarker.update(dt);
     }
-
-    ball.update(dt);
-
-    _.each(walls, function(wall) {
-      wall.update(dt);
-    });
-
-    checkCollisions(dt);
   }
 
   function checkCollisions(dt) {
     var bh = ball.getHitbox();
     var bhu = ball.getHitboxUnion();
+    var eh = endMarker.getHitbox();
     var bp = ball.physics;
     var ballMovingLeft = bp.vx < 0;
     var ballMovingRight = bp.vx > 0;
@@ -92,9 +97,22 @@
     var ballMovingDown = bp.vy > 0;
     var ballStoppedY = bp.vy === 0;
 
+    if (score < 0) {
+      score = 0;
+      stop();
+      return;
+    }
+
     // Check if ball goes out of the maze.  This would be my fault, but we'll blame the player.
     if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
       stop();
+      return;
+    }
+
+    if (app.util.intersects(bh, eh)) {
+      endMarker.isExploding = true;
+      stop();
+      return;
     }
 
     var bounceBallLeft = null;
@@ -207,9 +225,9 @@
   function render(dt) {
     clear();
 
-    renderScore();
+    renderScore(dt);
 
-    renderMarkers();
+    endMarker.render(dt);
 
     ball.render(dt);
 
@@ -227,9 +245,6 @@
       graphics.fillText(scoreText, 250, 30);
       graphics.restore();
     }
-  }
-
-  function renderMarkers() {
   }
 
   function clear() {
@@ -250,7 +265,7 @@
 
     canvas = document.getElementById("game-canvas");
 
-    bind();
+    bindEvents();
 
     graphics = new app.Graphics({
       canvas: canvas,
@@ -264,32 +279,28 @@
     start();
   }
 
-  function bind() {
+  function bindEvents() {
     _.each(["easy", "medium", "hard"], function(type) {
       $(".button-" + type).on("click", function() {
         reset(type);
-        start();
       });
     });
   }
 
   function reset(type) {
     isStarted = false;
-    isStopped = true;
+    isStopped = false;
 
     lastPresses = 0;
     elapsedTime = 0;
     displayTime = 0;
-    score = 1000;
+    score = 100;
     scoreText = "";
 
     createMaze(type);
   }
 
   function start() {
-    isStarted = false;
-    isStopped = false;
-
     dt = 0;
     last = timestamp();
     requestAnimationFrame(loop);
@@ -311,16 +322,13 @@
           vx: 0,
           vy: 0
         },
-        end: {
-        },
+        end: [0.5, 0.5, 0.05],
         walls: [
-          // Bounds
+          // [x, y, width, height]
           [0, 0, 1, 0], // top
           [1, 0, 1, 1], // right
           [1, 1, 0, 1], // bottom
           [0, 1, 0, 0], // left
-
-          // Maze walls
           [0.9, 1, 0.9, 0.1], // right
           [0.9, 0.1, 0.1, 0.1], // top
           [0.1, 0.1, 0.1, 0.9], // left
@@ -347,8 +355,7 @@
           vx: 0,
           vy: 0
         },
-        end: {
-        },
+        end: [0.5, 0.5, 0.05],
         walls: [
           // Bounds
           [0, 0, 1, 0], // top
@@ -367,8 +374,7 @@
           vx: 0,
           vy: 0
         },
-        end: {
-        },
+        end: [0.5, 0.5, 0.05],
         walls: [
           // Bounds
           [0, 0, 1, 0], // top
@@ -383,6 +389,7 @@
     maze = mazes[type];
     ball = createBall();
     walls = createWalls();
+    endMarker = createEndMarker();
   }
 
   function createBall() {
@@ -415,6 +422,15 @@
           y: wall[3] * mazeHeight + mazeY
         }]
       });
+    });
+  }
+
+  function createEndMarker() {
+    return new app.End({
+      graphics: graphics,
+      x: maze.end[0] * mazeWidth + mazeX,
+      y: maze.end[1] * mazeHeight + mazeY,
+      radius: maze.end[2] * mazeWidth
     });
   }
 
