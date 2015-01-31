@@ -111,14 +111,6 @@
       return;
     }
 
-    // Check if ball goes out of the maze.  This would be my fault, but we'll blame the player.
-    /*
-    if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
-      stop();
-      return;
-    }
-    */
-
     // Check if ball hits the end marker
     if (app.util.intersects(bh, eh)) {
       endMarker.isExploding = true;
@@ -127,7 +119,7 @@
 
       if (!explosionSound.paused) {
         explosionSound.pause();
-        explosionSound.currentTime = 0;
+        explosionSound.currentTime = 1;
       }
       explosionSound.play();
 

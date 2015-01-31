@@ -14,6 +14,10 @@ header {
   border-radius: 50px;
 }
 
+h1 {
+  margin-left: 15px;
+}
+
 strong {
   color: red;
 }
@@ -28,7 +32,7 @@ img {
 }
 
 .button-container {
-  margin: 0 auto;
+  margin: 25px auto 15px auto;
   width: 610px
 }
 
@@ -44,10 +48,12 @@ img {
 
 .button:hover {
   background-color: rgba(255, 0, 0, 0.1);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .button:active {
   background-color: rgba(255, 0, 0, 0.5);
+  color: white;
 }
 
 #game-canvas {

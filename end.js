@@ -21,7 +21,7 @@
               x: this.x,
               y: this.y,
               angle: Math.random() * Math.PI * 2,
-              radius: Math.random() * 10 + 5,
+              radius: Math.random() * 20 + 5,
               r: Math.floor(Math.random() * 255),
               g: Math.floor(Math.random() * 255),
               b: Math.floor(Math.random() * 255),
@@ -34,7 +34,7 @@
         _.each(this.particles, function(particle) {
           particle.x += Math.cos(particle.angle) * Math.random() * particle.speed;
           particle.y += Math.sin(particle.angle) * Math.random() * particle.speed;
-          particle.radius = Math.random() * 10 + 5;
+          particle.radius = Math.random() * 20 + 5;
           particle.r = Math.floor(Math.random() * 255);
           particle.g = Math.floor(Math.random() * 255);
           particle.b = Math.floor(Math.random() * 255);
