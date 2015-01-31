@@ -15,17 +15,43 @@
           this.currentRadius = 0;
         }
       } else {
-        if (this.currentRadius < 20000) {
-          this.currentRadius += dt * 2000;
+        if (!this.particles) {
+          this.particles = _.map(_.range(1000), function() {
+            return {
+              x: this.x,
+              y: this.y,
+              angle: Math.random() * Math.PI * 2,
+              radius: Math.random() * 10 + 5,
+              r: Math.floor(Math.random() * 255),
+              g: Math.floor(Math.random() * 255),
+              b: Math.floor(Math.random() * 255),
+              a: Math.random(),
+              speed: Math.random() * 10 + 5
+            };
+          }, this);
+        }
+
+        _.each(this.particles, function(particle) {
+          particle.x += Math.cos(particle.angle) * Math.random() * particle.speed;
+          particle.y += Math.sin(particle.angle) * Math.random() * particle.speed;
+          particle.radius = Math.random() * 10 + 5;
+          particle.r = Math.floor(Math.random() * 255);
+          particle.g = Math.floor(Math.random() * 255);
+          particle.b = Math.floor(Math.random() * 255);
+          particle.a = Math.random();
+        }, this);
+
+        if (this.currentRadius < 40000) {
+          this.currentRadius += dt * 1000;
         }
       }
     },
 
     render: function(dt) {
       this.graphics.save();
-      this.graphics.setFillStyle(this.fillStyle);
-      //this.graphics.setStrokeStyle(this.strokeStyle);
+
       var gradient = this.graphics.context.createRadialGradient(this.x, this.y, this.currentRadius, this.x, this.y, 0);
+
       if (this.isExploding) {
         gradient.addColorStop(0, "red");
         gradient.addColorStop(0.1, "orange");
@@ -40,20 +66,23 @@
       } else {
         gradient.addColorStop(0, "green");
       }
+
       gradient.addColorStop(1, "transparent");
-      this.graphics.setStrokeStyle("none");
+
       this.graphics.setFillStyle(gradient);
+      this.graphics.setStrokeStyle("transparent");
+
       this.graphics.fillCircle(this.x, this.y, this.currentRadius);
       this.graphics.fillCircle(this.x, this.y, this.currentRadius / 2);
 
-      if (this.isExploding) {
-        _.each(_.range(1000), function(i) {
-          var x = this.x + (2 * Math.random() - 1) * 3 * this.currentRadius;
-          var y = this.y + (2 * Math.random() - 1) * 3 * this.currentRadius;
-          this.graphics.setFillStyle("rgba(0, 0, 0, 0.5)");
-          this.graphics.fillCircle(x, y, Math.random() * 10);
+      if (this.particles) {
+        _.each(this.particles, function(particle) {
+          this.graphics.setFillStyle("rgba(" + particle.r + "," + particle.g + "," + particle.b + "," + particle.a + ")");
+          this.graphics.setStrokeStyle("white");
+          this.graphics.fillCircle(particle.x, particle.y, particle.radius);
         }, this);
       }
+
       this.graphics.restore();
     },
 

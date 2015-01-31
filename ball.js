@@ -27,6 +27,10 @@
     },
 
     render: function(dt) {
+      if (this.isExploding) {
+        return;
+      }
+
       this.graphics.save();
 
       this.graphics.setStrokeStyle(this.appearance.strokeStyle);

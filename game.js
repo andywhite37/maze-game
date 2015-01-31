@@ -20,8 +20,12 @@
   var canvas;
   var graphics;
   var input;
+  var predatorMusic;
+  var hitSound;
+  var explosionSound;
 
   // Game objects
+  var currentType = "easy";
   var maze;
   var ball;
   var walls;
@@ -58,9 +62,13 @@
   }
 
   function update(dt) {
-    if (!isStarted && (input.down() || input.up() || input.right() || input.left())) {
+    if (!isStarted && !isStopped && (input.down() || input.up() || input.right() || input.left())) {
       isStarted = true;
       elapsedTime = 0;
+    }
+
+    if (input.space()) {
+      reset(currentType);
     }
 
     if (isStarted) {
@@ -104,14 +112,25 @@
     }
 
     // Check if ball goes out of the maze.  This would be my fault, but we'll blame the player.
+    /*
     if (bh.left > width || bh.right < 0 || bh.top > height || bh.bottom < 0) {
       stop();
       return;
     }
+    */
 
+    // Check if ball hits the end marker
     if (app.util.intersects(bh, eh)) {
       endMarker.isExploding = true;
+      ball.isExploding = true;
       stop();
+
+      if (!explosionSound.paused) {
+        explosionSound.pause();
+        explosionSound.currentTime = 0;
+      }
+      explosionSound.play();
+
       return;
     }
 
@@ -169,9 +188,12 @@
       wall.restrictMovement();
     });
 
+    var isHit = false;
+
     if (bounceBallLeft || bounceBallRight) {
       if (!ball.collision.activeX) {
         ball.collision.activeX = true;
+        isHit = true;
 
         if (bounceBallLeft) {
           ball.physics.setX(bounceBallLeft.wall.getHitbox().left - ball.appearance.radius * 2);
@@ -198,6 +220,7 @@
     if (bounceBallUp || bounceBallDown) {
       if (!ball.collision.activeY) {
         ball.collision.activeY = true;
+        isHit = true;
 
         if (bounceBallUp) {
           ball.physics.setY(bounceBallUp.wall.getHitbox().top - ball.appearance.radius * 2);
@@ -220,12 +243,18 @@
     } else {
       ball.collision.activeY = false;
     }
+
+    if (isHit) {
+      if (!hitSound.paused) {
+        hitSound.pause();
+        hitSound.currentTime = 0;
+      }
+      hitSound.play();
+    }
   }
 
   function render(dt) {
     clear();
-
-    renderScore(dt);
 
     endMarker.render(dt);
 
@@ -234,6 +263,8 @@
     _.each(walls, function(wall) {
       wall.render(dt);
     });
+
+    renderScore(dt);
   }
 
   function renderScore() {
@@ -242,7 +273,7 @@
       graphics.context.shadowBlur = 10;
       graphics.context.shadowColor = "red";
       graphics.setFillStyle("white");
-      graphics.fillText(scoreText, 250, 30);
+      graphics.fillText(scoreText, 180, 40);
       graphics.restore();
     }
   }
@@ -264,6 +295,11 @@
     fpsMeter = new FPSMeter({ decimals: 0, graph: true, theme: "dark" });
 
     canvas = document.getElementById("game-canvas");
+    predatorMusic = document.getElementById("predator-music");
+    hitSound = document.getElementById("hit-sound");
+    explosionSound = document.getElementById("explosion-sound");
+
+    predatorMusic.play();
 
     bindEvents();
 
@@ -282,7 +318,8 @@
   function bindEvents() {
     _.each(["easy", "medium", "hard"], function(type) {
       $(".button-" + type).on("click", function() {
-        reset(type);
+        currentType = type;
+        reset(currentType);
       });
     });
   }
@@ -291,6 +328,7 @@
     isStarted = false;
     isStopped = false;
 
+    input.presses = 0;
     lastPresses = 0;
     elapsedTime = 0;
     displayTime = 0;
@@ -307,7 +345,11 @@
   }
 
   function stop() {
-    scoreText = "You died!  Your final score was: " + Math.round(score * 10) / 10;
+    if (score > 85) {
+      scoreText = "Cheater!  Your final score was: " + Math.round(score * 10) / 10;
+    } else {
+      scoreText = "You died!  Your final score was: " + Math.round(score * 10) / 10;
+    }
     isStopped = true;
     isStarted = false;
   }
@@ -324,7 +366,7 @@
         },
         end: [0.5, 0.5, 0.05],
         walls: [
-          // [x, y, width, height]
+          // [x1, y1, x2, y2]
           [0, 0, 1, 0], // top
           [1, 0, 1, 1], // right
           [1, 1, 0, 1], // bottom
@@ -355,18 +397,26 @@
           vx: 0,
           vy: 0
         },
-        end: [0.5, 0.5, 0.05],
+        end: [0.05, 0.05, 0.05],
         walls: [
           // Bounds
           [0, 0, 1, 0], // top
           [1, 0, 1, 1], // right
           [1, 1, 0, 1], // bottom
-          [0, 1, 0, 0] // left
+          [0, 1, 0, 0], // left
 
           // Maze walls
+          [0.9, 0.1, 0.9, 1],
+          [0.8, 0, 0.8, 0.9],
+          [0.7, 0.1, 0.7, 1],
+          [0.6, 0, 0.6, 0.9],
+          [0.5, 0.1, 0.5, 1],
+          [0.4, 0, 0.4, 0.9],
+          [0.3, 0.1, 0.3, 1],
+          [0.2, 0, 0.2, 0.9],
+          [0.1, 0.1, 0.1, 1]
         ]
       },
-      // Stair-step
       hard: {
         start: {
           x: mazeX + mazeWidth - 25,
@@ -374,14 +424,30 @@
           vx: 0,
           vy: 0
         },
-        end: [0.5, 0.5, 0.05],
+        end: [0.15, 0.25, 0.05],
         walls: [
           // Bounds
           [0, 0, 1, 0], // top
           [1, 0, 1, 1], // right
           [1, 1, 0, 1], // bottom
-          [0, 1, 0, 0] // left
+          [0, 1, 0, 0], // left
 
+          [0.9, 0.1, 0.9, 1],
+          [0.8, 0, 0.8, 0.9],
+          [0.1, 0.9, 0.8, 0.9],
+          [0, 0.8, 0.7, 0.8],
+          [0.7, 0.1, 0.7, 0.8],
+          [0.6, 0, 0.6, 0.7],
+          [0.1, 0.7, 0.6, 0.7],
+          [0, 0.6, 0.5, 0.6],
+          [0.5, 0.1, 0.5, 0.6],
+          [0.4, 0, 0.4, 0.5],
+          [0.1, 0.5, 0.4, 0.5],
+          [0, 0.4, 0.3, 0.4],
+          [0.3, 0.1, 0.3, 0.4],
+          [0.2, 0, 0.2, 0.3],
+          [0.1, 0.3, 0.2, 0.3],
+          [0.1, 0.1, 0.1, 0.3]
         ]
       }
     };

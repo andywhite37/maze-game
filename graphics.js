@@ -11,7 +11,7 @@
     this.context = this.canvas.getContext("2d");
 
     // Set defailts
-    this.setFont(options.font || "14pt 'Allerta Stencil', sans-serif");
+    this.setFont(options.font || "20pt 'Allerta Stencil', sans-serif");
     this.setLineWidth(options.lineWidth || 1);
     this.setStrokeStyle(options.strokeStyle || "black");
     this.setFillStyle(options.fillStyle || "gray");

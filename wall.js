@@ -14,8 +14,8 @@
     ];
 
     this.movement = _.extend({
-      speed: 500,
-      displacement: 40
+      speed: 600,
+      displacement: 320
     }, options.movement);
 
     this.collision = _.extend({
